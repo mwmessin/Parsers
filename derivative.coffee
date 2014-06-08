@@ -38,9 +38,29 @@ Grammar =
 class Language
   constructor: (@grammar) ->
 
-  lex: (string) -> tokens
+  parse: (source) ->
+    tokens = @lex source
+    @tree = program: []
 
-  derive: (character) ->
+    while tokens.length
+      @derive tokens.shift()
+
+    @tree
+
+  lex: (string) -> 
+    string.match ///
+      \w+
+    | \.
+    | ;
+    | \[
+    | \]
+    | \(
+    | \)
+    | '.*'
+    | ".*"
+    ///
+
+  derive: (symbol) ->
     ###
     derive c of
       null -> null
