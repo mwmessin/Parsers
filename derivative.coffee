@@ -1,38 +1,29 @@
 Grammar = 
   program: [
-    ''
-    'element program'
+    /(element program)?/
   ]
 
   element: [
-    'function identifier ( parameterlistopt ) compoundstatement'
-    'statement'
-  ]
-
-  parameterlistopt: [
-    'empty'
-    'parameterlist'
+    /function identifier \( (parameterlist)? \) compoundstatement/
+    /statement/
   ]
 
   parameterlist: [
-    'identifier'
-    'identifier parameterlist'
+    /identifier (parameterlist)?/
   ]
 
   compoundstatement: [
-    '{ statements }'
+    /\{ statements \}/
   ]
 
   statements: [
-    'empty'
-    'statement statements'
+    /(statement statements)?/
   ]
 
   statement: [
-    ';'
-    'if condition statement'
-    'if condition statement else statement'
-    'while condition statement'
+    /;/
+    /if condition statement (else statement)?/
+    /while condition statement/
   ]
 
 class Language
@@ -50,13 +41,13 @@ class Language
   lex: (string) -> 
     string.match ///
       \w+
-    | \. | , | ; | :
-    | + | - | * | / 
-    | == | != | === | !== | =
-    | \[ | \]
-    | \( | \)
-    | \{ | \}
-    | '.*' | ".*"
+      | \. | , | ; | :
+      | + | - | * | / 
+      | == | != | === | !== | =
+      | \[ | \]
+      | \( | \)
+      | \{ | \}
+      | '.*' | ".*"
     ///g
 
   derive: (symbol) ->
