@@ -1,32 +1,39 @@
 Grammar = 
-  program:
+  program: [
     ''
     'element program'
+  ]
 
-  element:
+  element: [
     'function identifier ( parameterlistopt ) compoundstatement'
     'statement'
+  ]
 
-  parameterlistopt:
+  parameterlistopt: [
     'empty'
     'parameterlist'
+  ]
 
-  parameterlist:
+  parameterlist: [
     'identifier'
     'identifier parameterlist'
+  ]
 
-  compoundstatement:
+  compoundstatement: [
     '{ statements }'
+  ]
 
-  statements:
+  statements: [
     'empty'
     'statement statements'
+  ]
 
-  statement:
+  statement: [
     ';'
     'if condition statement'
     'if condition statement else statement'
     'while condition statement'
+  ]
 
 class Language
   constructor: (@grammar) ->
