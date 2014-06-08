@@ -58,7 +58,7 @@ class Language
     | \)
     | '.*'
     | ".*"
-    ///
+    ///g
 
   derive: (symbol) ->
     ###
