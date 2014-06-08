@@ -1,23 +1,11 @@
 Grammar = 
   program: [
-    /(element program)?/
+    /(element)*/
   ]
 
   element: [
-    /function identifier \( (parameterlist)? \) compoundstatement/
+    /function identifier \( (identifier)* \) \{ (statement)* \}/
     /statement/
-  ]
-
-  parameterlist: [
-    /identifier (parameterlist)?/
-  ]
-
-  compoundstatement: [
-    /\{ statements \}/
-  ]
-
-  statements: [
-    /(statement statements)?/
   ]
 
   statement: [
@@ -31,7 +19,9 @@ class Language
 
   parse: (source) ->
     tokens = @lex source
-    @tree = program: []
+    @tree = 
+      symbol: 'program'
+      children: []
 
     while tokens.length
       @derive tokens.shift()
