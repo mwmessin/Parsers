@@ -1,17 +1,21 @@
+Test = """
+  function a() { return 1; }
+"""
+
 Grammar = 
   program: [
-    /(element)*/
+    "(element)*"
   ]
 
   element: [
-    /function identifier \( (identifier)* \) \{ (statement)* \}/
-    /statement/
+    "function identifier \( (identifier)* \) \{ (statement)* \}"
+    "statement"
   ]
 
   statement: [
-    /;/
-    /if condition statement (else statement)?/
-    /while condition statement/
+    ";"
+    "if condition statement (else statement)?"
+    "while condition statement"
   ]
 
 class Language
@@ -57,7 +61,7 @@ class Language
 
   nullify: -> nullity 
 
-
-
   compact: ->
 
+
+(new Language(Grammar)).parse(Test)
