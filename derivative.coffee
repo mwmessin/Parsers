@@ -3,19 +3,40 @@ Test = """
 """
 
 Grammar = 
-  program: [
-    "(element)*"
+  PROGRAM: [
+    "(ELEMENT)*"
   ]
 
-  element: [
-    "function identifier \( (identifier)* \) \{ (statement)* \}"
-    "statement"
+  ELEMENT: [
+    "function IDENTIFIER ( IDENTIFIER* ) { STATEMENT* }"
+    "STATEMENT"
   ]
 
-  statement: [
+  STATEMENT: [
     ";"
-    "if condition statement (else statement)?"
-    "while condition statement"
+    "if ( EXPRESSION ) { STATEMENT* } ELSE?"
+    "while ( EXPRESSION ) { STATEMENT* }"
+    "return EXPRESSION"
+  ]
+
+  ELSE: [
+    "else STATEMENT"
+  ]
+
+  EXPRESSION: [
+    "IDENTIFIER"
+    "STRING"
+    "true"
+    "false"
+    /\d/
+  ]
+
+  IDENTIFIER: [
+    /\w+/
+  ]
+
+  STRING: [
+    /'.*'|".*"/
   ]
 
 class Language
@@ -59,7 +80,26 @@ class Language
 
     return if not @grammar
 
-  nullify: -> nullity 
+  nullify: (symbol) ->
+    if symbol is null
+      return null 
+
+    if symbol is ''
+      return '' 
+
+    if @const symbol
+      return null 
+
+    if @alt symbol
+      return @grammar[symbol].map((case) => @nullify(case)).or()
+
+    if @cons symbol
+      return @grammar[symbol].map((case) => @nullify(case)).or()
+
+
+  const: (symbol) -> ! symbol.contains(' ') && ! @grammar[symbol]?
+  alt: (symbol) -> @grammar[symbol]?.length > 1
+  cons: (symbol) -> symbol.contains(' ')
 
   compact: ->
 
