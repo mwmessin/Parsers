@@ -1,10 +1,6 @@
-Test = """
-  function a() { return 1; }
-"""
-
 Grammar = 
   PROGRAM: [
-    "(ELEMENT)*"
+    "ELEMENT*"
   ]
 
   ELEMENT: [
@@ -44,14 +40,9 @@ class Language
 
   parse: (source) ->
     tokens = @lex source
-    @tree = 
-      symbol: 'program'
-      children: []
 
     while tokens.length
-      @derive tokens.shift()
-
-    @tree
+      @derive tokens.shift(), 'PROGRAM'
 
   lex: (string) -> 
     string.match ///
@@ -65,7 +56,35 @@ class Language
       | '.*' | ".*"
     ///g
 
-  derive: (symbol) ->
+  derive: (token, symbol) ->
+    if ! symbol
+      return
+
+    if symbol is ''
+      return
+      
+    if @const symbol
+      if token is symbol
+        return ''
+      else
+        return
+
+    if @alt symbol
+      return @grammar[symbol].map((case) => @derive(token, case))
+
+    if @rep symbol
+      return "#{@derive(token, symbol.extract(/(\w+)/))} #{symbol}"
+
+    if @cond symbol
+      return @derive(token, symbol.extract(/(\w+)/))
+
+    if @cons symbol
+      [first, rest...] = symbol.split(' ')
+      if @nullability first
+        ["#{@derive(token, first)} #{rest.join(' ')}", @derive(token, rest.join(' '))]
+      else
+        "#{@derive(token, first)} #{rest.join(' ')}"
+
     ###
     derive c of
       null -> null
@@ -78,17 +97,15 @@ class Language
       A*   -> derive(A),A*
     ###
 
-    return if not @grammar
-
   nullability: (symbol) ->
-    if symbol is null
-      return null 
+    if ! symbol
+      return
 
     if symbol is ''
       return '' 
 
     if @const symbol
-      return null 
+      return
 
     if @alt symbol
       return @grammar[symbol].map((case) => @nullability(case)).or()
@@ -110,4 +127,6 @@ class Language
 
   compact: ->
 
-(new Language(Grammar)).parse(Test)
+(new Language(Grammar)).parse """
+  function a() { return 1; }
+"""
