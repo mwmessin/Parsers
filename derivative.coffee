@@ -80,7 +80,7 @@ class Language
 
     return if not @grammar
 
-  nullify: (symbol) ->
+  nullability: (symbol) ->
     if symbol is null
       return null 
 
@@ -91,17 +91,23 @@ class Language
       return null 
 
     if @alt symbol
-      return @grammar[symbol].map((case) => @nullify(case)).or()
+      return @grammar[symbol].map((case) => @nullability(case)).or()
 
     if @cons symbol
-      return @grammar[symbol].map((case) => @nullify(case)).or()
+      return symbol.split(' ').map((sub) => @nullability(sub)).and()
 
+    if @rep symbol
+      return ''
 
-  const: (symbol) -> ! symbol.contains(' ') && ! @grammar[symbol]?
+    if @cond symbol
+      return ''
+
+  const: (symbol) -> symbol.isRegexp || ! symbol.contains(' ') && ! @grammar[symbol]?
   alt: (symbol) -> @grammar[symbol]?.length > 1
   cons: (symbol) -> symbol.contains(' ')
+  rep: (symbol) -> symbol.contains('*')
+  cond: (symbol) -> symbol.contains('?')
 
   compact: ->
-
 
 (new Language(Grammar)).parse(Test)
