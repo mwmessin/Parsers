@@ -56,7 +56,7 @@ class Language
       | '.*' | ".*"
     ///g
 
-  derive: (token, symbol) ->
+  derive: ((token, symbol) =>
     if ! symbol
       return
 
@@ -70,22 +70,23 @@ class Language
         return
 
     if @alt symbol
-      return @grammar[symbol].map((case) => @derive(token, case))
+      return => @grammar[symbol].map((case) => @derive(token, case)) #lazy
 
     if @rep symbol
-      return "#{@derive(token, symbol.extract(/(\w+)/))} #{symbol}"
+      return => "#{@derive(token, symbol.extract(/(\w+)/))} #{symbol}" #lazy
 
     if @cond symbol
-      return @derive(token, symbol.extract(/(\w+)/))
+      return => @derive(token, symbol.extract(/(\w+)/)) #lazy
 
     if @cat symbol
       [first, rest...] = symbol.split(' ')
       if @nullability first
-        ["#{@derive(token, first)} #{rest.join(' ')}", @derive(token, rest.join(' '))]
+        => ["#{@derive(token, first)} #{rest.join(' ')}", @derive(token, rest.join(' '))] #lazy
       else
-        "#{@derive(token, first)} #{rest.join(' ')}"
+        => "#{@derive(token, first)} #{rest.join(' ')}" #lazy
+  ).memoize()
 
-  nullability: (symbol) ->
+  nullability: ((symbol) ->
     if ! symbol
       return
 
@@ -106,6 +107,7 @@ class Language
 
     if @cond symbol
       return ''
+  ).leastFixedPoint() #?
 
   const: (symbol) -> symbol.isRegexp || ! symbol.contains(' ') && ! @grammar[symbol]?
   alt: (symbol) -> @grammar[symbol]?.length > 1
