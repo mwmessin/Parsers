@@ -57,6 +57,18 @@ class Language
     ///g
 
   derive: (token, symbol) ->
+    ###
+    derive c of
+      null -> null
+      ''   -> null
+      c    -> ''
+      c'   -> null if c' != c
+      A,B  -> derive(A),B if not A.contains ''
+      A,B  -> derive(A),B|derive(B) if A.contains ''
+      A|B  -> derive(A)|derive(B)
+      A*   -> derive(A),A*
+    ###
+    
     if ! symbol
       return
 
@@ -84,18 +96,6 @@ class Language
         ["#{@derive(token, first)} #{rest.join(' ')}", @derive(token, rest.join(' '))]
       else
         "#{@derive(token, first)} #{rest.join(' ')}"
-
-    ###
-    derive c of
-      null -> null
-      ''   -> null
-      c    -> ''
-      c'   -> null if c' != c
-      A,B  -> derive(A),B if not A.contains ''
-      A,B  -> derive(A),B|derive(B) if A.contains ''
-      A|B  -> derive(A)|derive(B)
-      A*   -> derive(A),A*
-    ###
 
   nullability: (symbol) ->
     if ! symbol
