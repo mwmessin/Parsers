@@ -78,7 +78,7 @@ class Language
     if @cond symbol
       return @derive(token, symbol.extract(/(\w+)/))
 
-    if @cons symbol
+    if @cat symbol
       [first, rest...] = symbol.split(' ')
       if @nullability first
         ["#{@derive(token, first)} #{rest.join(' ')}", @derive(token, rest.join(' '))]
@@ -98,7 +98,7 @@ class Language
     if @alt symbol
       return @grammar[symbol].map((case) => @nullability(case)).or()
 
-    if @cons symbol
+    if @cat symbol
       return symbol.split(' ').map((sub) => @nullability(sub)).and()
 
     if @rep symbol
@@ -109,7 +109,7 @@ class Language
 
   const: (symbol) -> symbol.isRegexp || ! symbol.contains(' ') && ! @grammar[symbol]?
   alt: (symbol) -> @grammar[symbol]?.length > 1
-  cons: (symbol) -> symbol.contains(' ')
+  cat: (symbol) -> symbol.contains(' ')
   rep: (symbol) -> symbol.contains('*')
   cond: (symbol) -> symbol.contains('?')
 
