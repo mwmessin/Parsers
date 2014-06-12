@@ -70,7 +70,7 @@ class Language
         return
 
     if @alt symbol
-      return => @grammar[symbol].map((case) => @derive(token, case)) #lazy
+      return => @grammar[symbol].map((alt) => @derive(token, alt)) #lazy
 
     if @rep symbol
       return => "#{@derive(token, symbol.extract(/(\w+)/))} #{symbol}" #lazy
@@ -97,7 +97,7 @@ class Language
       return
 
     if @alt symbol
-      return @grammar[symbol].map((case) => @nullability(case)).or()
+      return @grammar[symbol].map((alt) => @nullability(alt)).or()
 
     if @cat symbol
       return symbol.split(' ').map((sub) => @nullability(sub)).and()
