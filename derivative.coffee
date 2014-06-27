@@ -87,6 +87,9 @@ class Language
   ).memoize()
 
   nullability: ((symbol) ->
+    # while (some node's nullability changed) {
+    #    update the nullability for every node in the grammar
+    # }
     if ! symbol
       return
 
@@ -115,7 +118,7 @@ class Language
   rep: (symbol) -> symbol.contains('*')
   cond: (symbol) -> symbol.contains('?')
 
-  compact: ->
+  compact: -> #?
 
 (new Language(Grammar)).parse """
   function a() { return 1; }
