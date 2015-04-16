@@ -1,84 +1,56 @@
-Grammar = 
-  PROGRAM: [
-    "ELEMENT*"
-  ]
+Function::implement = (members) ->
+  for key of members
+    if members[key] != @prototype[key]
+      console.warn "overwriting #{key} in #{@name || this}.prototype" if @prototype.hasOwnProperty key
+      Object.defineProperty @prototype, key, value: members[key], enumerable: false
 
-  ELEMENT: [
-    "function IDENTIFIER ( IDENTIFIER* ) { STATEMENT* }"
-    "STATEMENT"
-  ]
+Function.implement
+  memoize: (memo = {}) ->
+    callback = this
+    -> memo[JSON.stringify arguments] ||= callback.apply this, arguments
 
-  STATEMENT: [
-    ";"
-    "if ( EXPRESSION ) { STATEMENT* } ELSE?"
-    "while ( EXPRESSION ) { STATEMENT* }"
-    "return EXPRESSION"
-  ]
+  leastFixedPoint: ->
+    callback = this
+    -> callback.apply this, arguments
 
-  ELSE: [
-    "else STATEMENT"
-  ]
-
-  EXPRESSION: [
-    "IDENTIFIER"
-    "STRING"
-    "true"
-    "false"
-    /\d/
-  ]
-
-  IDENTIFIER: [
-    /\w+/
-  ]
-
-  STRING: [
-    /'.*'|".*"/
-  ]
+String::contains = (string) -> @indexOf(string) != -1
 
 class Language
-  constructor: (@grammar) ->
+  constructor: (@lexeme, @grammar) ->
 
   parse: (source) ->
-    tokens = @lex source
+    @tokens = @lex source
 
     while tokens.length
-      @derive tokens.shift(), 'PROGRAM'
+      for symbol in @grammar
+        @derive @tokens.shift(), symbol
 
   lex: (string) -> 
-    string.match ///
-      \w+
-      | \. | , | ; | :
-      | + | - | * | / 
-      | == | != | === | !== | =
-      | \[ | \]
-      | \( | \)
-      | \{ | \}
-      | '.*' | ".*"
-    ///g
+    string.match @lexeme
 
-  derive: ((token, symbol) =>
+  derive: ((token, symbol) ->
     if ! symbol
       return
 
     if symbol is ''
       return
-      
-    if @const symbol
+    
+    if @constant symbol
       if token is symbol
         return ''
       else
         return
 
-    if @alt symbol
+    if @alternatives symbol
       return => @grammar[symbol].map((alt) => @derive(token, alt)) #lazy
 
-    if @rep symbol
+    if @repeating symbol
       return => "#{@derive(token, symbol.extract(/(\w+)/))} #{symbol}" #lazy
 
-    if @cond symbol
+    if @conditional symbol
       return => @derive(token, symbol.extract(/(\w+)/)) #lazy
 
-    if @cat symbol
+    if @concatenation symbol
       [first, rest...] = symbol.split(' ')
       if @nullability first
         => ["#{@derive(token, first)} #{rest.join(' ')}", @derive(token, rest.join(' '))] #lazy
@@ -96,30 +68,79 @@ class Language
     if symbol is ''
       return '' 
 
-    if @const symbol
+    if @constant symbol
       return
 
-    if @alt symbol
+    if @alternatives symbol
       return @grammar[symbol].map((alt) => @nullability(alt)).or()
 
-    if @cat symbol
+    if @concatenation symbol
       return symbol.split(' ').map((sub) => @nullability(sub)).and()
 
-    if @rep symbol
+    if @repeating symbol
       return ''
 
-    if @cond symbol
+    if @conditional symbol
       return ''
   ).leastFixedPoint() #?
 
-  const: (symbol) -> symbol.isRegexp || ! symbol.contains(' ') && ! @grammar[symbol]?
-  alt: (symbol) -> @grammar[symbol]?.length > 1
-  cat: (symbol) -> symbol.contains(' ')
-  rep: (symbol) -> symbol.contains('*')
-  cond: (symbol) -> symbol.contains('?')
+  constant: (symbol) -> symbol.isRegexp || ! symbol.contains(' ') && ! @grammar[symbol]?
+  alternatives: (symbol) -> @grammar[symbol]?.length > 1
+  concatenation: (symbol) -> symbol.contains(' ')
+  repeating: (symbol) -> symbol.contains('*')
+  conditional: (symbol) -> symbol.contains('?')
 
-  compact: -> #?
+  compact: -> #? key to performance
 
-(new Language(Grammar)).parse """
+Javascript = new Language(
+  ///
+    \w+
+    | \. | , | ; | :
+    | \+ | - | \* | / 
+    | == | != | === | !== | =
+    | \[ | \]
+    | \( | \)
+    | \{ | \}
+    | '[^']*' | "[^"]*"
+  ///g,
+  {
+    PROGRAM: [
+      "ELEMENT*"
+    ]
+
+    ELEMENT: [
+      "function IDENTIFIER ( IDENTIFIER* ) { STATEMENT* }"
+      "STATEMENT"
+    ]
+
+    STATEMENT: [
+      "if ( EXPRESSION ) { STATEMENT* } ELSE?"
+      "while ( EXPRESSION ) { STATEMENT* }"
+      "return EXPRESSION ;"
+    ]
+
+    ELSE: [
+      "else STATEMENT"
+    ]
+
+    EXPRESSION: [
+      "IDENTIFIER"
+      "STRING"
+      "true"
+      "false"
+      /\d/
+    ]
+
+    IDENTIFIER: [
+      /\w+/
+    ]
+
+    STRING: [
+      /'[^']*'|"[^"]*"/
+    ]
+  }
+)
+
+Javascript.parse """
   function a() { return 1; }
 """
